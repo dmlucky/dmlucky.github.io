@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Go 语言快速上手指南 | 项目实战博客版</title>
+<meta name="description" content="以 creative_one_tto_agent 项目代码为案例的 Go 语言快速上手博客，包含章节导航、代码复制、阅读进度、主题切换与学习资源。">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #090d16;
+    --bg-soft: #0f172a;
+    --surface: rgba(15, 23, 42, 0.78);
+    --surface-strong: #111827;
+    --fg: #e5edf7;
+    --muted: #9aa8bd;
+    --border: rgba(148, 163, 184, 0.22);
+    --accent: #38bdf8;
+    --accent-2: #a78bfa;
+    --accent-3: #34d399;
+    --warning: #fbbf24;
+    --code-bg: #0b1020;
+    --shadow: 0 24px 80px rgba(2, 6, 23, 0.45);
+    --keyword: #ff7b72;
+    --string: #a5d6ff;
+    --type: #ffa657;
+    --func: #d2a8ff;
+    --comment: #8b949e;
+    --num: #7ee787;
+  }
+
+  [data-theme="light"] {
+    color-scheme: light;
+    --bg: #f5f7fb;
+    --bg-soft: #eaf2ff;
+    --surface: rgba(255, 255, 255, 0.88);
+    --surface-strong: #ffffff;
+    --fg: #172033;
+    --muted: #5f6f86;
+    --border: rgba(31, 41, 55, 0.14);
+    --accent: #0284c7;
+    --accent-2: #7c3aed;
+    --accent-3: #059669;
+    --warning: #b45309;
+    --code-bg: #111827;
+    --shadow: 0 22px 70px rgba(15, 23, 42, 0.12);
+    --comment: #94a3b8;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background:
+      radial-gradient(circle at 8% 2%, rgba(56, 189, 248, 0.20), transparent 26rem),
+      radial-gradient(circle at 92% 10%, rgba(167, 139, 250, 0.18), transparent 24rem),
+      linear-gradient(180deg, var(--bg) 0%, var(--bg-soft) 100%);
+    color: var(--fg);
+    line-height: 1.75;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image: linear-gradient(rgba(148, 163, 184, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
+    background-size: 34px 34px;
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent 70%);
+  }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  p { margin: 0 0 14px; }
+  ul, ol { margin: 0 0 14px 22px; padding: 0; }
+  li { margin-bottom: 6px; }
+
+  .read-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 40;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent-3));
+    transform-origin: 0 50%;
+    transform: scaleX(0);
+  }
+
+  .theme-toggle, .back-top {
+    position: fixed;
+    z-index: 30;
+    right: 22px;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--fg);
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    backdrop-filter: blur(16px);
+  }
+  .theme-toggle { top: 22px; }
+  .back-top { bottom: 22px; opacity: 0; transform: translateY(8px); transition: .2s ease; }
+  .back-top.visible { opacity: 1; transform: translateY(0); }
+
+  .hero {
+    position: relative;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 72px 24px 28px;
+  }
+
+  .hero-card {
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 32px;
+    background: linear-gradient(135deg, rgba(15,23,42,.92), rgba(30,41,59,.74));
+    box-shadow: var(--shadow);
+    padding: clamp(28px, 5vw, 56px);
+  }
+  [data-theme="light"] .hero-card { background: linear-gradient(135deg, rgba(255,255,255,.94), rgba(239,246,255,.86)); }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border: 1px solid rgba(56, 189, 248, .35);
+    border-radius: 999px;
+    color: var(--accent);
+    background: rgba(56, 189, 248, .10);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .02em;
+  }
+
+  h1 {
+    margin: 18px 0 14px;
+    max-width: 850px;
+    font-size: clamp(34px, 6vw, 68px);
+    line-height: 1.05;
+    letter-spacing: -0.06em;
+  }
+
+  .hero-subtitle { max-width: 800px; color: var(--muted); font-size: clamp(16px, 2vw, 20px); }
+  .hero-actions, .meta-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 22px; }
+  .btn, .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    padding: 9px 14px;
+    background: rgba(148, 163, 184, .10);
+    color: var(--fg);
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .btn.primary { border-color: rgba(56, 189, 248, .45); background: linear-gradient(135deg, rgba(56,189,248,.22), rgba(167,139,250,.20)); }
+  .chip { color: var(--muted); font-weight: 600; }
+
+  .blog-layout {
+    display: grid;
+    grid-template-columns: minmax(230px, 280px) minmax(0, 1fr);
+    gap: 26px;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 24px 72px;
+  }
+
+  .toc {
+    position: sticky;
+    top: 24px;
+    max-height: calc(100vh - 48px);
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 18px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(18px);
+  }
+  .toc h3 { margin: 0 0 12px; color: var(--fg); font-size: 15px; }
+  .toc ol { list-style: none; margin: 0; }
+  .toc li { margin: 0; }
+  .toc a {
+    display: block;
+    border-radius: 12px;
+    padding: 7px 10px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.35;
+  }
+  .toc a:hover, .toc a.active { color: var(--fg); background: rgba(56, 189, 248, .12); text-decoration: none; }
+  .search-box {
+    width: 100%;
+    margin-bottom: 14px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 10px 12px;
+    background: rgba(2, 6, 23, .24);
+    color: var(--fg);
+    outline: none;
+  }
+  [data-theme="light"] .search-box { background: rgba(255,255,255,.72); }
+
+  .post { min-width: 0; }
+  .resource-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin: 0 0 22px;
+  }
+  .resource-card, .chapter, .post-footer {
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(18px);
+  }
+  .resource-card { padding: 18px; }
+  .resource-card strong { display: block; margin-bottom: 6px; font-size: 16px; }
+  .resource-card span { display: block; color: var(--muted); font-size: 13px; }
+
+  .chapter {
+    padding: clamp(20px, 3vw, 32px);
+    margin-bottom: 22px;
+    scroll-margin-top: 18px;
+  }
+  .chapter h2:first-child { margin-top: 0; }
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 36px 0 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    font-size: clamp(22px, 3vw, 30px);
+    letter-spacing: -0.03em;
+  }
+  h2::before {
+    content: "#";
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 11px;
+    color: #08111f;
+    background: linear-gradient(135deg, var(--accent), var(--accent-3));
+    font-size: 18px;
+  }
+  h3 { margin: 24px 0 10px; color: var(--accent); font-size: 18px; }
+
+  pre {
+    position: relative;
+    margin: 0 0 18px;
+    overflow-x: auto;
+    border: 1px solid rgba(148, 163, 184, .18);
+    border-radius: 18px;
+    padding: 18px;
+    background: linear-gradient(180deg, rgba(15,23,42,.96), var(--code-bg));
+    color: #dbeafe;
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+  code { font-family: "SF Mono", "Fira Code", "Cascadia Code", Menlo, Consolas, monospace; font-size: 0.92em; }
+  :not(pre) > code { background: rgba(56, 189, 248, .10); padding: 2px 7px; border-radius: 7px; border: 1px solid var(--border); color: var(--fg); }
+  .copy-code {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    border: 1px solid rgba(148, 163, 184, .28);
+    border-radius: 999px;
+    padding: 5px 10px;
+    background: rgba(15, 23, 42, .84);
+    color: #dbeafe;
+    cursor: pointer;
+    font-size: 12px;
+  }
+
+  .kw { color: var(--keyword); }
+  .st { color: var(--string); }
+  .ty { color: var(--type); }
+  .fn { color: var(--func); }
+  .cm { color: var(--comment); }
+  .num { color: var(--num); }
+
+  table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 0 0 18px; overflow: hidden; border: 1px solid var(--border); border-radius: 16px; }
+  th, td { border-bottom: 1px solid var(--border); padding: 10px 12px; text-align: left; vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  th { background: rgba(56, 189, 248, .10); font-weight: 800; }
+  tr:nth-child(even) td { background: rgba(148, 163, 184, .05); }
+
+  .tag { display: inline-block; background: #1f6feb33; color: var(--accent); border-radius: 999px; padding: 2px 8px; font-size: 0.85em; margin-right: 4px; }
+  .file-ref {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: 0.88em;
+  }
+  .file-ref::before { content: "📍"; }
+  blockquote { border-left: 4px solid var(--accent); padding: 12px 16px; color: var(--muted); margin: 0 0 18px; background: rgba(56, 189, 248, .08); border-radius: 0 14px 14px 0; }
+  .post-footer { padding: 22px; color: var(--muted); font-size: 14px; }
+
+  @media (max-width: 960px) {
+    .blog-layout { grid-template-columns: 1fr; }
+    .toc { position: relative; top: 0; max-height: none; }
+    .resource-grid { grid-template-columns: 1fr; }
+  }
+  @media print {
+    .theme-toggle, .back-top, .read-progress, .toc, .copy-code { display: none !important; }
+    body { background: #fff; color: #111; }
+    .hero, .blog-layout { max-width: none; padding: 0; }
+    .chapter, .hero-card, .post-footer { box-shadow: none; border-color: #ddd; break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="read-progress" aria-hidden="true"></div>
+<button class="theme-toggle" type="button" aria-label="切换明暗主题">🌗</button>
+<button class="back-top" type="button" aria-label="回到顶部">↑</button>
+
+<header class="hero">
+  <div class="hero-card">
+    <span class="eyebrow">Go Blog · Project-based Guide</span>
+    <h1>Go 语言快速上手指南</h1>
+    <p class="hero-subtitle">基于当前项目 <code>creative_one_tto_agent</code> 的实际代码，按博客阅读体验重排 Go 语法、工程模式与项目实践。每一章都保留真实代码片段，适合作为团队新人上手手册。</p>
+    <div class="hero-actions">
+      <a class="btn primary" href="#s1">开始阅读</a>
+      <a class="btn" href="#references">参考资料</a>
+      <button class="btn" type="button" onclick="window.print()">导出/打印</button>
+    </div>
+    <div class="meta-row" aria-label="文章元信息">
+      <span class="chip">Go 1.24.7</span>
+      <span class="chip">18 个章节</span>
+      <span class="chip">项目实战示例</span>
+      <span class="chip">阅读进度 / 搜索 / 复制代码</span>
+    </div>
+  </div>
+</header>
+
+<div class="blog-layout">
+<aside class="toc" aria-label="文章目录">
+<input class="search-box" type="search" placeholder="搜索章节 / 关键词..." aria-label="搜索文章内容">
+<h3>目录</h3>
+<ol>
+  <li><a href="#s1">包、导入与模块</a></li>
+  <li><a href="#s2">变量、常量与基本类型</a></li>
+  <li><a href="#s3">函数与方法</a></li>
+  <li><a href="#s4">struct 与 interface</a></li>
+  <li><a href="#s5">指针</a></li>
+  <li><a href="#s6">控制流</a></li>
+  <li><a href="#s7">数组、切片与 map</a></li>
+  <li><a href="#s8">错误处理</a></li>
+  <li><a href="#s9">defer、panic、recover</a></li>
+  <li><a href="#s10">泛型 (Generics)</a></li>
+  <li><a href="#s11">goroutine 与 channel</a></li>
+  <li><a href="#s12">context</a></li>
+  <li><a href="#s13">struct tag 与序列化</a></li>
+  <li><a href="#s14">init 函数</a></li>
+  <li><a href="#s15">测试</a></li>
+  <li><a href="#s16">类型断言与 type switch</a></li>
+  <li><a href="#s17">函数类型与闭包</a></li>
+  <li><a href="#s18">常见模式速查</a></li>
+</ol>
+</aside>
+
+<main class="post" id="article">
+
+<div class="resource-grid" aria-label="精选学习参考">
+  <a class="resource-card" href="https://go.dev/blog/" target="_blank" rel="noopener">
+    <strong>The Go Blog</strong>
+    <span>官方博客风格：清晰标题、发布时间、主题聚合，适合作为博客信息架构参考。</span>
+  </a>
+  <a class="resource-card" href="https://gobyexample.com/" target="_blank" rel="noopener">
+    <strong>Go by Example</strong>
+    <span>代码驱动式教程，适合借鉴“概念 + 可运行示例”的讲解节奏。</span>
+  </a>
+  <a class="resource-card" href="https://github.com/inancgumus/learngo" target="_blank" rel="noopener">
+    <strong>learngo</strong>
+    <span>上千个手写示例、练习和测验，适合补充课后练习路径。</span>
+  </a>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s1">1. 包、导入与模块</h2>
+
+<h3>每个 .go 文件以 <code>package</code> 声明开头</h3>
+<pre><span class="kw">package</span> main       <span class="cm">// 可执行程序的入口包</span>
+<span class="kw">package</span> model      <span class="cm">// 普通库包，包名通常等于目录名</span></pre>
+
+<h3>import 的三种形式</h3>
+<pre><span class="cm">// 1. 普通导入</span>
+<span class="kw">import</span> <span class="st">"fmt"</span>
+
+<span class="cm">// 2. 分组导入（项目中最常见）</span>
+<span class="kw">import</span> (
+    <span class="st">"context"</span>
+    <span class="st">"fmt"</span>
+
+    <span class="st">"code.byted.org/gopkg/logs"</span>                        <span class="cm">// 内部依赖</span>
+    <span class="st">"github.com/cloudwego/eino/schema"</span>                  <span class="cm">// 第三方依赖</span>
+)
+
+<span class="cm">// 3. 别名导入</span>
+<span class="kw">import</span> (
+    internal_common <span class="st">"code.byted.org/.../internal/common"</span>  <span class="cm">// 解决包名冲突</span>
+    dalRedis        <span class="st">"code.byted.org/.../internal/platform/dal/redis"</span>
+)
+<span class="cm">// 使用时: internal_common.AsyncSendLarkAlarm(...)</span></pre>
+
+<h3>导出规则：首字母大写 = 公开，小写 = 私有</h3>
+<pre><span class="kw">func</span> <span class="fn">DoSomething</span>() {}   <span class="cm">// 公开，可被外部包调用</span>
+<span class="kw">func</span> <span class="fn">doInternal</span>() {}    <span class="cm">// 私有，仅包内可见</span>
+
+<span class="kw">type</span> <span class="ty">MyStruct</span> <span class="kw">struct</span> {    <span class="cm">// 公开类型</span>
+    Name <span class="ty">string</span>         <span class="cm">// 公开字段</span>
+    age  <span class="ty">int</span>            <span class="cm">// 私有字段</span>
+}</pre>
+<p class="file-ref">参考: handler.go:1-32, agent_instance.go:1-26</p>
+
+<!-- ============================================================ -->
+<h2 id="s2">2. 变量、常量与基本类型</h2>
+
+<h3>变量声明</h3>
+<pre><span class="cm">// := 短声明（最常用，自动推断类型）</span>
+conversationID, err := strconv.ParseInt(req.MessageInfo.GetConversationId(), <span class="num">10</span>, <span class="num">64</span>)
+lock, ok, err := api.AcquireConversationSSELock(ctx, conversationID, <span class="num">30</span>*time.Minute, stream)
+
+<span class="cm">// var 声明（包级别或需要零值时）</span>
+<span class="kw">var</span> conversationRunPool gopool.Pool
+<span class="kw">var</span> defaultEngineRegistry = NewEngineRegistry()
+
+<span class="cm">// 多变量声明</span>
+<span class="kw">var</span> (
+    webhookAlarmBot *LarkWebhookBot
+    defaultAsyncTaskStore AsyncTaskStore
+)</pre>
+
+<h3>常量</h3>
+<pre><span class="kw">const</span> (
+    SessionStatus_Init     SessionStatus = <span class="num">0</span>
+    SessionStatus_Running  SessionStatus = <span class="num">1</span>
+    SessionStatus_Finished SessionStatus = <span class="num">10</span>
+)
+
+<span class="kw">const</span> (
+    larkAlarmWebhook = <span class="st">"https://open.larkoffice.com/..."</span>
+    larkAlarmSecret  = <span class="st">"geuhIqaNwrHbzu3ai9wicg"</span>
+)</pre>
+
+<h3>基本类型</h3>
+<table>
+<tr><th>类型</th><th>说明</th><th>项目示例</th></tr>
+<tr><td><code>string</code></td><td>字符串</td><td>sessionID, logId</td></tr>
+<tr><td><code>int, int32, int64</code></td><td>有符号整数</td><td>conversationID (int64), StatusCode (int32)</td></tr>
+<tr><td><code>float64</code></td><td>浮点数</td><td>较少见</td></tr>
+<tr><td><code>bool</code></td><td>布尔值</td><td>ok, existed, handled</td></tr>
+<tr><td><code>byte</code></td><td>字节 (uint8)</td><td>JSON 序列化</td></tr>
+<tr><td><code>error</code></td><td>错误接口</td><td>几乎所有函数的返回值</td></tr>
+<tr><td><code>any</code></td><td>interface{} 的别名</td><td>bizInterruptInfo, sessionValues</td></tr>
+</table>
+
+<h3>类型定义</h3>
+<pre><span class="kw">type</span> SessionStatus <span class="ty">int32</span>              <span class="cm">// 基于 int32 的新类型</span>
+<span class="kw">type</span> InterruptType <span class="ty">string</span>            <span class="cm">// 基于 string 的新类型</span>
+<span class="kw">type</span> ErrKind <span class="ty">string</span>                  <span class="cm">// 语义化的 string 别名</span>
+<span class="kw">type</span> contextKeyType <span class="ty">string</span>          <span class="cm">// 用于 context key 避免冲突</span></pre>
+<p class="file-ref">参考: session.go:128-133, interrupt.go:3-11, errors.go:6</p>
+
+<!-- ============================================================ -->
+<h2 id="s3">3. 函数与方法</h2>
+
+<h3>函数定义</h3>
+<pre><span class="cm">// 格式: func 函数名(参数) 返回值 { }</span>
+<span class="kw">func</span> <span class="fn">InitService</span>() { ... }
+
+<span class="cm">// 多返回值（Go 的特色）</span>
+<span class="kw">func</span> <span class="fn">GetOrCreateInstance</span>(ctx context.Context, sessionID <span class="ty">string</span>) (InstanceRunner, <span class="ty">error</span>) { ... }
+
+<span class="cm">// 命名返回值（handler.go 大量使用）</span>
+<span class="kw">func</span> (s *CreativeOneAIAgentServiceImpl) <span class="fn">ConversationChat</span>(
+    ctx context.Context,
+    req *ai_agent.ConversationChatReq,
+    stream ai_agent.CreativeOneAIAgentService_ConversationChatServer,
+) (<span class="fn">err</span> <span class="ty">error</span>) {   <span class="cm">// err 是命名返回值，可直接赋值</span>
+    ...
+    <span class="kw">return</span>   <span class="cm">// 裸 return，返回 err 的当前值</span>
+}</pre>
+
+<h3>方法（带接收者 receiver）</h3>
+<pre><span class="cm">// 指针接收者（可以修改接收者状态，项目中最常见）</span>
+<span class="kw">func</span> (s *AgentInstance[T]) <span class="fn">Run</span>(ctx context.Context, userInput *model.UserInput) *model.AgentEngineRunResult { ... }
+
+<span class="cm">// 值接收者（不修改原值）</span>
+<span class="kw">func</span> (s AgentSession[T]) <span class="fn">GetStatus</span>() SessionStatus {
+    <span class="kw">return</span> s.RunResult.Status
+}
+
+<span class="cm">// 方法也可以有命名返回值</span>
+<span class="kw">func</span> (s *CreativeOneAIAgentServiceImpl) <span class="fn">Echo</span>(ctx context.Context, req *ai_agent.EchoReq) (resp *ai_agent.EchoResp, err <span class="ty">error</span>) { ... }</pre>
+
+<h3>泛型函数</h3>
+<pre><span class="kw">func</span> <span class="fn">GetSessionValue</span>[T <span class="ty">any</span>](ctx context.Context, key <span class="ty">string</span>) (T, <span class="ty">bool</span>) {
+    v, ok := adk.GetSessionValue(ctx, key)
+    <span class="kw">if</span> !ok {
+        <span class="kw">var</span> zero T
+        <span class="kw">return</span> zero, <span class="kw">false</span>
+    }
+    t, ok := v.(T)
+    <span class="kw">return</span> t, ok
+}
+
+<span class="kw">func</span> <span class="fn">DecodeAny</span>[T <span class="ty">any</span>](biz <span class="ty">any</span>) *T { ... }</pre>
+<p class="file-ref">参考: handler.go:54-56, agent_instance.go:68, utils.go:12-25</p>
+
+<!-- ============================================================ -->
+<h2 id="s4">4. struct 与 interface</h2>
+
+<h3>struct 定义与实例化</h3>
+<pre><span class="kw">type</span> <span class="ty">AgentSession</span>[T <span class="ty">any</span>] <span class="kw">struct</span> {
+    ConversationID   <span class="ty">string</span>                   <span class="st">`json:"conversation_id" bson:"conversation_id"`</span>
+    BizState         *T                         <span class="st">`json:"state" bson:"state"`</span>
+    MessageList      []*schema.Message          <span class="st">`json:"message_list" bson:"message_list"`</span>
+    Extra            <span class="kw">map</span>[<span class="ty">string</span>]<span class="ty">string</span>           <span class="st">`json:"extra,omitempty" bson:"extra,omitempty"`</span>
+    RunResult        AgentEngineRunResult       <span class="st">`json:"run_result" bson:"run_result"`</span>
+}
+
+<span class="cm">// 实例化</span>
+session = &amp;model.AgentSession[T]{
+    ConversationID: sessionID,
+    MessageList:    <span class="fn">make</span>([]*schema.Message, <span class="num">0</span>),
+    BizState:       <span class="fn">new</span>(T),
+    RunResult: model.AgentEngineRunResult{
+        Status: model.SessionStatus_Init,
+    },
+}</pre>
+
+<h3>interface 定义与实现（隐式实现！）</h3>
+<pre><span class="cm">// 定义接口</span>
+<span class="kw">type</span> <span class="ty">InstanceRunner</span> <span class="kw">interface</span> {
+    Run(ctx context.Context, userInput *model.UserInput) *model.AgentEngineRunResult
+    Resume(ctx context.Context, bizInterruptInfo <span class="ty">any</span>, interruptType model.InterruptType) *model.AgentEngineRunResult
+}
+
+<span class="kw">type</span> <span class="ty">AgentEngine</span> <span class="kw">interface</span> {
+    GetOrCreateInstance(ctx context.Context, sessionID <span class="ty">string</span>) (InstanceRunner, <span class="ty">error</span>)
+    Cancel(ctx context.Context, sessionID <span class="ty">string</span>) <span class="ty">error</span>
+}
+
+<span class="kw">type</span> <span class="ty">AsyncTaskStore</span> <span class="kw">interface</span> {
+    SaveTask(ctx context.Context, taskInfo *model.AsyncTaskInfo) (<span class="ty">int64</span>, <span class="ty">error</span>)
+    GetTask(ctx context.Context, taskID <span class="ty">int64</span>) (*model.AsyncTaskInfo, <span class="ty">error</span>)
+    UpdateTask(ctx context.Context, taskID <span class="ty">int64</span>, taskInfo *model.AsyncTaskInfo) <span class="ty">error</span>
+}
+
+<span class="cm">// Go 的接口是隐式实现的：只要 struct 有接口所需的方法，它就实现了该接口
+// AgentInstance[T] 有 Run() 和 Resume() → 自动实现了 InstanceRunner</span></pre>
+<p class="file-ref">参考: agent_instance.go:28-31, agent_engine_service.go:39-42, async_task.go:13-29</p>
+
+<!-- ============================================================ -->
+<h2 id="s5">5. 指针</h2>
+
+<pre><span class="cm">// *Type 表示指向 Type 的指针</span>
+<span class="kw">func</span> <span class="fn">NewEngineRegistry</span>() *EngineRegistry {
+    <span class="kw">return</span> &amp;EngineRegistry{engines: <span class="fn">make</span>(<span class="kw">map</span>[agent_const.AgentBizType]AgentEngine)}
+}
+
+<span class="cm">// & 取地址，* 解引用</span>
+session := &amp;model.AgentSession[T]{...}   <span class="cm">// 创建并取地址</span>
+s.RunResult = *result                     <span class="cm">// 解引用，复制值</span>
+
+<span class="cm">// nil 指针检查（重要！）</span>
+<span class="kw">if</span> req == <span class="kw">nil</span> || req.MessageInfo == <span class="kw">nil</span> { ... }
+<span class="kw">if</span> s.service.runSessionInit != <span class="kw">nil</span> { ... }
+<span class="kw">if</span> lock != <span class="kw">nil</span> { ... }</pre>
+
+<h3>指针 vs 值接收者</h3>
+<table>
+<tr><th></th><th>指针接收者 <code>(s *Type)</code></th><th>值接收者 <code>(s Type)</code></th></tr>
+<tr><td>能否修改原值</td><td>能</td><td>不能（操作的是副本）</td></tr>
+<tr><td>调用时</td><td>传指针或可寻址的值</td><td>传值或指针均可（自动解引用）</td></tr>
+<tr><td>使用场景</td><td>需要修改状态、struct 较大</td><td>只读、小 struct</td></tr>
+</table>
+<p class="file-ref">参考: registry.go:19-21, agent_instance.go:68, handler.go:40-41</p>
+
+<!-- ============================================================ -->
+<h2 id="s6">6. 控制流</h2>
+
+<h3>if</h3>
+<pre><span class="cm">// 标准 if</span>
+<span class="kw">if</span> err != <span class="kw">nil</span> {
+    <span class="kw">return</span> err
+}
+
+<span class="cm">// if 带短声明（极其常见）</span>
+<span class="kw">if</span> err := s.saveSession(ctx); err != <span class="kw">nil</span> { ... }
+<span class="kw">if</span> logID, ok := kitutil.GetCtxLogID(ctx); ok { ... }
+<span class="kw">if</span> baseResp := mapErrForReq(err, req); baseResp != <span class="kw">nil</span> { ... }</pre>
+
+<h3>for（Go 唯一的循环语句）</h3>
+<pre><span class="cm">// 1. 类 while 循环</span>
+<span class="kw">for</span> runCtx.Err() != <span class="kw">nil</span> { ... }
+
+<span class="cm">// 2. 无限循环 + break</span>
+<span class="kw">for</span> {
+    event, ok := iter.Next()
+    <span class="kw">if</span> !ok {
+        <span class="kw">break</span>
+    }
+    ...
+}
+
+<span class="cm">// 3. range 遍历（最常用）</span>
+<span class="kw">for</span> stage, e := <span class="kw">range</span> stageErrs { ... }
+<span class="kw">for</span> _, event := <span class="kw">range</span> eventStreamingRespList { ... }   <span class="cm">// _ 忽略索引</span>
+
+<span class="cm">// 4. 传统三段式</span>
+<span class="kw">for</span> i := <span class="num">0</span>; i &lt; <span class="fn">len</span>(arr); i++ { ... }</pre>
+
+<h3>switch</h3>
+<pre><span class="kw">switch</span> s.session.GetStatus() {
+<span class="kw">case</span> model.SessionStatus_Running:
+    <span class="cm">// ...</span>
+<span class="kw">case</span> model.SessionStatus_Suspend:
+    <span class="cm">// ...</span>
+<span class="kw">case</span> model.SessionStatus_Finished:
+    <span class="cm">// ...</span>
+<span class="kw">default</span>:
+    <span class="cm">// ...</span>
+}
+
+<span class="cm">// switch 不带表达式（替代 if-else 链）</span>
+<span class="kw">switch</span> {
+<span class="kw">case</span> interruptType == model.InterruptType_AsyncTask:
+    <span class="cm">// ...</span>
+<span class="kw">case</span> interruptType == model.InterruptType_UserInteract:
+    <span class="cm">// ...</span>
+}</pre>
+
+<h3>select（用于 channel 操作）</h3>
+<pre><span class="kw">select</span> {
+<span class="kw">case</span> &lt;-ctx.Done():
+    <span class="kw">return</span>
+<span class="kw">case</span> &lt;-ticker.C:
+    _, err := dalRedis.RedisCli.RawClient().Get(key).Bytes()
+    <span class="kw">if</span> err == <span class="kw">nil</span> {
+        cancelRun()
+        <span class="kw">return</span>
+    }
+}</pre>
+<p class="file-ref">参考: agent_instance.go:102-237, agent_instance.go:568-591, handler.go:63-87</p>
+
+<!-- ============================================================ -->
+<h2 id="s7">7. 数组、切片与 map</h2>
+
+<h3>切片 (slice) — 动态数组</h3>
+<pre><span class="cm">// 创建切片</span>
+agentInput := <span class="fn">make</span>([]*schema.Message, <span class="num">0</span>)           <span class="cm">// 空切片</span>
+sessionValues := <span class="kw">map</span>[<span class="ty">string</span>]<span class="ty">any</span>{ ... }                  <span class="cm">// 字面量初始化</span>
+
+<span class="cm">// append 追加元素</span>
+agentInput = <span class="fn">append</span>(agentInput, userMessage)
+s.session.MessageList = <span class="fn">append</span>(s.session.MessageList, message)
+
+<span class="cm">// 访问最后一个元素</span>
+lastMsg := s.session.MessageList[<span class="fn">len</span>(s.session.MessageList)-<span class="num">1</span>]
+
+<span class="cm">// 切片运算符 [low:high]</span>
+interruptCtx := lastEvent.Action.Interrupted.InterruptContexts[<span class="num">0</span>]</pre>
+
+<h3>map</h3>
+<pre><span class="cm">// 创建 map</span>
+stageErrs := <span class="kw">map</span>[<span class="ty">string</span>]<span class="ty">error</span>{}
+extraMap := <span class="kw">map</span>[<span class="ty">string</span>]<span class="ty">string</span>{
+    model.AsyncTaskExtraKey_UserMessageID: userMessageId,
+}
+r.engines = <span class="fn">make</span>(<span class="kw">map</span>[agent_const.AgentBizType]AgentEngine)
+
+<span class="cm">// 读写</span>
+stageErrs[<span class="st">"acquire_lock"</span>] = err
+tags[metric.ErrMsg] = result.Error.Reason
+value, _ := a.Extra[key]       <span class="cm">// 忽略 ok（不存在时返回零值）</span>
+
+<span class="cm">// 检查 key 是否存在</span>
+<span class="kw">if</span> v, ok := raw[key]; ok &amp;&amp; <span class="fn">len</span>(v) > <span class="num">0</span> { ... }
+
+<span class="cm">// 删除</span>
+<span class="fn">delete</span>(m, key)</pre>
+<p class="file-ref">参考: handler.go:63, agent_instance.go:281-286, async_task.go:59-61</p>
+
+<!-- ============================================================ -->
+<h2 id="s8">8. 错误处理</h2>
+
+<h3>基本模式：始终检查 error</h3>
+<pre><span class="kw">if</span> err != <span class="kw">nil</span> {
+    <span class="kw">return</span> err    <span class="cm">// 或 return nil, err</span>
+}</pre>
+
+<h3>自定义错误类型</h3>
+<pre><span class="cm">// 实现 error 接口只需要 Error() string 方法</span>
+<span class="kw">type</span> <span class="ty">TypedClientError</span> <span class="kw">struct</span> {
+    Code    <span class="ty">int</span>
+    Message <span class="ty">string</span>
+    Cause   <span class="ty">error</span>
+}
+
+<span class="kw">func</span> (e *TypedClientError) <span class="fn">Error</span>() <span class="ty">string</span> { ... }
+<span class="kw">func</span> (e *TypedClientError) <span class="fn">Unwrap</span>() <span class="ty">error</span> { <span class="kw">return</span> e.Cause }  <span class="cm">// 支持 errors.Is/As</span></pre>
+
+<h3>错误包装与判断</h3>
+<pre><span class="cm">// %w 包装错误，保留原始错误链</span>
+<span class="kw">return</span> fmt.Errorf(<span class="st">"acquire conversation lock failed: %w"</span>, err)
+
+<span class="cm">// errors.Is 判断错误类型</span>
+<span class="kw">if</span> errors.Is(event.Err, context.Canceled) { ... }
+<span class="kw">if</span> errors.Is(err, context.DeadlineExceeded) { ... }
+
+<span class="cm">// errors.As 提取特定错误类型</span>
+<span class="kw">var</span> typed *TypedClientError
+<span class="kw">if</span> errors.As(err, &amp;typed) { ... }</pre>
+
+<h3>项目中错误的两种处理模式</h3>
+<pre><span class="cm">// 模式1: 直接返回 error</span>
+result.SetError(errors.New(<span class="st">"[AgentInstance.Run] session status is running"</span>))
+
+<span class="cm">// 模式2: 不返回 error，改为写入 resp.BaseResp（handler.go 常用）</span>
+resp.BaseResp = mapErrForReq(err, req)
+<span class="kw">return</span> resp, <span class="kw">nil</span></pre>
+<p class="file-ref">参考: structured_error.go:13-41, errors.go:19-41, agent_instance.go:105-106, handler.go:208-217</p>
+
+<!-- ============================================================ -->
+<h2 id="s9">9. defer、panic、recover</h2>
+
+<h3>defer — 延迟执行（LIFO 顺序）</h3>
+<pre><span class="kw">func</span> (s *CreativeOneAIAgentServiceImpl) <span class="fn">ConversationChat</span>(...) (<span class="fn">err</span> <span class="ty">error</span>) {
+    <span class="kw">defer</span> <span class="kw">func</span>() {
+        <span class="kw">if</span> conversationID > <span class="num">0</span> {
+            <span class="kw">defer</span> api.ClearSSETerminalSent(conversationID)  <span class="cm">// defer 可嵌套</span>
+        }
+        metric.RecordConversationCost(<span class="st">"chat"</span>, err, stop)
+        <span class="kw">for</span> stage, e := <span class="kw">range</span> stageErrs {
+            metric.RecordConversionStage(<span class="st">"chat"</span>, stage, e)
+        }
+    }()
+    <span class="cm">// ... 业务逻辑</span>
+}
+
+<span class="cm">// defer 常用场景</span>
+<span class="kw">defer</span> cancelRun()                              <span class="cm">// 取消 context</span>
+<span class="kw">defer</span> ticker.Stop()                             <span class="cm">// 停止 ticker</span>
+<span class="kw">defer</span> <span class="kw">func</span>() { <span class="kw">if</span> r := recover(); r != <span class="kw">nil</span> { ... } }()  <span class="cm">// 捕获 panic</span></pre>
+
+<h3>panic / recover</h3>
+<pre><span class="cm">// panic: 严重错误，直接终止（类似 throw）</span>
+<span class="kw">if</span> err := dal.InitRedis(); err != <span class="kw">nil</span> {
+    <span class="fn">panic</span>(err.Error())
+}
+
+<span class="cm">// recover: 必须在 defer 中调用，捕获 panic</span>
+<span class="kw">defer</span> <span class="kw">func</span>() {
+    <span class="kw">if</span> r := recover(); r != <span class="kw">nil</span> {
+        errMsg := fmt.Sprintf(<span class="st">"recover from panic: %v\n stack:%s"</span>, r, debug.Stack())
+        logs.CtxError(ctx, errMsg)
+        result.SetError(errors.New(errMsg))
+    }
+}()</pre>
+<p class="file-ref">参考: handler.go:66-87, main.go:44-49, agent_instance.go:239-244, bot_alarm.go:79-86</p>
+
+<!-- ============================================================ -->
+<h2 id="s10">10. 泛型 (Generics) — Go 1.18+</h2>
+
+<h3>泛型 struct（项目中大量使用）</h3>
+<pre><span class="kw">type</span> <span class="ty">AgentSession</span>[T <span class="ty">any</span>] <span class="kw">struct</span> {
+    BizState *T  <span class="st">`json:"state" bson:"state"`</span>
+    <span class="cm">// ...</span>
+}
+
+<span class="kw">type</span> <span class="ty">AgentInstance</span>[T <span class="ty">any</span>] <span class="kw">struct</span> { ... }
+<span class="kw">type</span> <span class="ty">AgentEngineService</span>[T <span class="ty">any</span>] <span class="kw">struct</span> { ... }
+<span class="kw">type</span> <span class="ty">CommonAsyncTaskHandler</span>[ToolInput <span class="ty">any</span>, TaskSubmitResp model.AsyncTaskToolResp] <span class="kw">struct</span> { ... }</pre>
+
+<h3>泛型函数</h3>
+<pre><span class="kw">func</span> <span class="fn">GetSessionValue</span>[T <span class="ty">any</span>](ctx context.Context, key <span class="ty">string</span>) (T, <span class="ty">bool</span>) { ... }
+<span class="kw">func</span> <span class="fn">DecodeAny</span>[T <span class="ty">any</span>](biz <span class="ty">any</span>) *T { ... }
+<span class="kw">func</span> <span class="fn">SafeInferTool</span>[T, D <span class="ty">any</span>](toolName, toolDesc <span class="ty">string</span>, i utils.InvokeFunc[T, D]) (tool.InvokableTool, <span class="ty">error</span>) { ... }</pre>
+
+<h3>泛型函数类型</h3>
+<pre><span class="kw">type</span> <span class="ty">AsyncTaskSubmitter</span>[ToolInput <span class="ty">any</span>, TaskSubmitResp <span class="ty">any</span>] <span class="kw">func</span>(
+    ctx context.Context,
+    input ToolInput,
+) (rpcReq <span class="ty">any</span>, resp TaskSubmitResp, err <span class="ty">error</span>)</pre>
+
+<h3>使用泛型时的实例化</h3>
+<pre><span class="cm">// 显式指定类型参数</span>
+task := common.DecodeAny[model.AsyncTaskInfo](bizInterruptInfo)
+
+<span class="cm">// 类型推断（编译器自动推断）</span>
+session, err := common.GetAgentSession[<span class="ty">any</span>](ctx)</pre>
+<p class="file-ref">参考: agent_engine_service.go:21, common_async_task_handler.go:18, utils.go:65-78, async_task.go:133-134</p>
+
+<!-- ============================================================ -->
+<h2 id="s11">11. goroutine 与 channel</h2>
+
+<h3>goroutine — 轻量级并发</h3>
+<pre><span class="cm">// 使用 gopool（项目封装的协程池）</span>
+conversationRunPool.CtxGo(engineCtx, <span class="kw">func</span>() {
+    res := agentInstance.Run(engineCtx, userMessage)
+    logs.CtxInfo(engineCtx, <span class="st">"[agentInstance.Run] engine result:%+v, err:%+v"</span>, res, res.Error)
+})
+
+<span class="cm">// 使用原生 go 关键字启动 goroutine</span>
+<span class="kw">go</span> s.pollCancelFlag(runCtx, cancelRun, s.session.CurrentUserMessageId)</pre>
+
+<h3>select + channel + ticker 模式</h3>
+<pre><span class="kw">func</span> (s *AgentInstance[T]) <span class="fn">pollCancelFlag</span>(ctx context.Context, cancelRun context.CancelFunc, messageID <span class="ty">string</span>) {
+    ticker := time.NewTicker(<span class="num">1</span> * time.Second)
+    <span class="kw">defer</span> ticker.Stop()
+    <span class="kw">for</span> {
+        <span class="kw">select</span> {
+        <span class="kw">case</span> &lt;-ctx.Done():
+            <span class="kw">return</span>
+        <span class="kw">case</span> &lt;-ticker.C:
+            _, err := dalRedis.RedisCli.RawClient().Get(key).Bytes()
+            <span class="kw">if</span> err == <span class="kw">nil</span> {
+                cancelRun()
+                <span class="kw">return</span>
+            }
+        }
+    }
+}</pre>
+<p class="file-ref">参考: handler.go:187-190, agent_instance.go:278, agent_instance.go:568-591</p>
+
+<!-- ============================================================ -->
+<h2 id="s12">12. context — 贯穿整个调用链</h2>
+
+<h3>context 是 Go 中传递请求范围值的标准方式</h3>
+<pre><span class="cm">// context.Background() — 根 context</span>
+engineCtx := context.Background()
+
+<span class="cm">// context.WithValue — 存储键值对</span>
+ctx = context.WithValue(ctx, api.ConvChatFirstChunkStartKey, time.Now())
+runCtxWithSaver := context.WithValue(runCtx, model.SessionValueKey_SessionSaver, ...)
+
+<span class="cm">// context.WithCancel — 可取消的 context</span>
+runCtx, cancelRun := context.WithCancel(ctx)
+<span class="kw">defer</span> cancelRun()
+
+<span class="cm">// 检查 context 是否已取消</span>
+<span class="kw">if</span> runCtx.Err() != <span class="kw">nil</span> { ... }</pre>
+
+<h3>项目中 context 的核心用法</h3>
+<pre><span class="cm">// 1. 传递 LogID（链路追踪）</span>
+<span class="kw">if</span> logID, ok := kitutil.GetCtxLogID(ctx); ok {
+    engineCtx = kitutil.NewCtxWithLogID(engineCtx, logID)
+}
+
+<span class="cm">// 2. 传递环境信息</span>
+<span class="kw">if</span> env, ok := kitutil.GetCtxEnv(ctx); ok {
+    engineCtx = kitutil.NewCtxWithEnv(engineCtx, env)
+}
+
+<span class="cm">// 3. 所有函数第一个参数都是 ctx（Go 惯例）</span>
+<span class="kw">func</span> <span class="fn">DoSomething</span>(ctx context.Context, ...) { ... }</pre>
+<p class="file-ref">参考: handler.go:170-176, agent_instance.go:275-279</p>
+
+<!-- ============================================================ -->
+<h2 id="s13">13. struct tag 与序列化</h2>
+
+<h3>struct tag 用于标记字段的元信息</h3>
+<pre><span class="kw">type</span> <span class="ty">AgentSession</span>[T <span class="ty">any</span>] <span class="kw">struct</span> {
+    ConversationID <span class="ty">string</span> <span class="st">`json:"conversation_id" bson:"conversation_id"`</span>
+    Extra          <span class="kw">map</span>[<span class="ty">string</span>]<span class="ty">string</span> <span class="st">`json:"extra,omitempty" bson:"extra,omitempty"`</span>
+    ToolCallMap    <span class="kw">map</span>[<span class="ty">string</span>]*schema.ToolCall <span class="st">`json:"tool_call_map,omitempty" bson:"tool_call_map,omitempty"`</span>
+}
+
+<span class="kw">type</span> <span class="ty">PlanItem</span> <span class="kw">struct</span> {
+    Step       <span class="ty">string</span> <span class="st">`json:"step" jsonschema_description:"List of plan steps."`</span>
+    StepStatus <span class="ty">string</span> <span class="st">`json:"step_status" jsonschema:"enum=not_started,enum=in_progress"`</span>
+}
+
+<span class="kw">type</span> <span class="ty">AsyncTaskInfo</span> <span class="kw">struct</span> {
+    TaskID     <span class="ty">int64</span>  <span class="st">`json:"task_id"`</span>
+    Param      <span class="ty">string</span> <span class="st">`json:"param"`</span>
+    Result     <span class="ty">string</span> <span class="st">`json:"result,omitempty"`</span>    <span class="cm">// omitempty: 空值时不序列化</span>
+}</pre>
+
+<h3>常用 tag 含义</h3>
+<table>
+<tr><th>Tag</th><th>用途</th></tr>
+<tr><td><code>json:"name"</code></td><td>JSON 序列化字段名</td></tr>
+<tr><td><code>json:"name,omitempty"</code></td><td>空值时不出现在 JSON 中</td></tr>
+<tr><td><code>bson:"name"</code></td><td>MongoDB BSON 字段名</td></tr>
+<tr><td><code>bson:"name,omitempty"</code></td><td>MongoDB 空值不存储</td></tr>
+<tr><td><code>jsonschema:"enum=a,enum=b"</code></td><td>JSON Schema 约束（用于 AI tool 定义）</td></tr>
+</table>
+
+<h3>自定义 JSON 反序列化</h3>
+<pre><span class="cm">// 实现 json.Unmarshaler 接口来自定义反序列化行为</span>
+<span class="kw">func</span> (a *AsyncTaskInfo) <span class="fn">UnmarshalJSON</span>(data []<span class="ty">byte</span>) <span class="ty">error</span> {
+    <span class="kw">var</span> raw <span class="kw">map</span>[<span class="ty">string</span>]json.RawMessage
+    <span class="kw">if</span> err := json.Unmarshal(data, &amp;raw); err != <span class="kw">nil</span> {
+        <span class="kw">return</span> err
+    }
+    <span class="cm">// 自定义解析逻辑...</span>
+}</pre>
+<p class="file-ref">参考: session.go:26-44, async_task.go:55-127</p>
+
+<!-- ============================================================ -->
+<h2 id="s14">14. init 函数</h2>
+
+<pre><span class="cm">// init 在包被导入时自动执行，用于初始化（每个文件可有多个 init）</span>
+<span class="kw">func</span> <span class="fn">init</span>() {
+    schema.Register[*AgentSession[<span class="ty">any</span>]]()
+    schema.Register[*CommonInterruptInfo]()
+    schema.Register[*AsyncTaskInfo]()
+}
+
+<span class="kw">func</span> <span class="fn">init</span>() {
+    conversationRunPool = gopool.NewPool(<span class="st">"ConversationRun"</span>, <span class="num">50</span>, &amp;gopool.Config{...})
+}
+
+<span class="kw">func</span> <span class="fn">init</span>() {
+    wh := strings.TrimSpace(larkAlarmWebhook)
+    <span class="kw">if</span> wh == <span class="st">""</span> { <span class="kw">return</span> }
+    webhookAlarmBot = NewLarkWebhookBot(wh, strings.TrimSpace(larkAlarmSecret))
+}</pre>
+<p class="file-ref">参考: session.go:13-24, handler.go:46-51, bot_alarm.go:33-45</p>
+
+<!-- ============================================================ -->
+<h2 id="s15">15. 测试</h2>
+
+<h3>测试文件命名：<code>*_test.go</code>，函数命名：<code>TestXxx</code></h3>
+<pre><span class="kw">func</span> <span class="fn">TestAsyncTaskInfo_UnmarshalJSON_KeyVariants</span>(t *testing.T) {
+    <span class="cm">// 表格驱动测试（Go 中最常见的测试模式）</span>
+    cases := []<span class="kw">struct</span> {
+        name <span class="ty">string</span>
+        in   <span class="ty">string</span>
+    }{
+        {name: <span class="st">"snake_case"</span>, in: <span class="st">`{"task_id": 42}`</span>},
+        {name: <span class="st">"camelCase"</span>,  in: <span class="st">`{"taskID": "42"}`</span>},
+    }
+
+    <span class="kw">for</span> _, c := <span class="kw">range</span> cases {
+        t.Run(c.name, <span class="kw">func</span>(t *testing.T) {   <span class="cm">// 子测试（可单独运行）</span>
+            <span class="kw">var</span> got AsyncTaskInfo
+            require.NoError(t, json.Unmarshal([]<span class="fn">byte</span>(c.in), &amp;got))
+            assert.Equal(t, <span class="fn">int64</span>(<span class="num">42</span>), got.TaskID)
+        })
+    }
+}</pre>
+
+<h3>常用断言库（项目使用 testify）</h3>
+<table>
+<tr><th>方法</th><th>说明</th></tr>
+<tr><td><code>assert.Equal(t, expected, actual)</code></td><td>断言相等，失败继续执行</td></tr>
+<tr><td><code>require.NoError(t, err)</code></td><td>断言无错误，失败立即终止</td></tr>
+<tr><td><code>assert.Error(t, err)</code></td><td>断言有错误</td></tr>
+<tr><td><code>t.Run(name, func)</code></td><td>创建子测试</td></tr>
+</table>
+<p class="file-ref">参考: async_task_test.go:17-86</p>
+
+<!-- ============================================================ -->
+<h2 id="s16">16. 类型断言与 type switch</h2>
+
+<h3>类型断言</h3>
+<pre><span class="cm">// 单返回值（失败会 panic）</span>
+assetListStr.(<span class="ty">string</span>)
+
+<span class="cm">// 双返回值（安全，推荐）</span>
+commonInterrupt, ok := interruptCtx.Info.(model.CommonInterruptInfo)
+<span class="kw">if</span> !ok { ... }
+
+<span class="kw">if</span> v, ok := req.(hasBizType); ok { ... }</pre>
+
+<h3>type switch</h3>
+<pre><span class="cm">// projects using type switch to handle different error kinds</span>
+<span class="kw">switch</span> e.Kind {
+<span class="kw">case</span> ErrMCPError, ErrMCPInternalError:
+    <span class="kw">return</span> newBaseResp(ErrCodeUpstreamToolFailed, <span class="st">"..."</span>)
+<span class="kw">case</span> ErrLLMLimit:
+    <span class="kw">return</span> newBaseResp(ErrCodeRateLimited, <span class="st">"..."</span>)
+<span class="kw">case</span> ErrInternal:
+    <span class="kw">return</span> newBaseResp(ErrCodeInternal, <span class="st">"..."</span>)
+}</pre>
+<p class="file-ref">参考: handler.go:522-526, agent_instance.go:348-352, structured_error.go:73-91</p>
+
+<!-- ============================================================ -->
+<h2 id="s17">17. 函数类型与闭包</h2>
+
+<h3>函数作为一等公民</h3>
+<pre><span class="cm">// 函数类型定义</span>
+<span class="kw">type</span> <span class="ty">UserInteractResumer</span>[T <span class="ty">any</span>] <span class="kw">func</span>(
+    ctx context.Context,
+    session *model.AgentSession[T],
+    userInput *model.UserInput,
+    bizInterruptInfo <span class="ty">any</span>,
+) (handled <span class="ty">bool</span>, resumeBizInterruptInfo <span class="ty">any</span>, resumeInterruptType model.InterruptType, err <span class="ty">error</span>)
+
+<span class="cm">// 函数作为 struct 字段（策略模式）</span>
+<span class="kw">type</span> <span class="ty">AgentEngineService</span>[T <span class="ty">any</span>] <span class="kw">struct</span> {
+    buildAgent        <span class="kw">func</span>(ctx context.Context) (adk.Agent, <span class="ty">error</span>)
+    handleAgentOutput <span class="kw">func</span>(ctx context.Context, key <span class="ty">string</span>, event *model.StreamOutputSchema) <span class="ty">error</span>
+    runSessionInit    <span class="kw">func</span>(ctx context.Context, session *model.AgentSession[T], input *model.UserInput) <span class="ty">error</span>
+}</pre>
+
+<h3>闭包（匿名函数捕获外部变量）</h3>
+<pre><span class="cm">// 闭包作为 defer 的参数，捕获了 err, conversationID 等变量</span>
+<span class="kw">defer</span> <span class="kw">func</span>() {
+    <span class="kw">if</span> conversationID > <span class="num">0</span> {
+        <span class="kw">defer</span> api.ClearSSETerminalSent(conversationID)
+    }
+    metric.RecordConversationCost(<span class="st">"chat"</span>, err, stop)
+}()
+
+<span class="cm">// 返回一个闭包（函数工厂）</span>
+<span class="kw">func</span> (s *AgentInstance[T]) <span class="fn">startSessionLatencyMetric</span>() <span class="kw">func</span>(<span class="kw">map</span>[<span class="ty">string</span>]<span class="ty">string</span>) {
+    <span class="kw">return</span> metric.NewDeferredCostTimeMetric(metric.AgentSessionLatency, <span class="st">"ms"</span>)
+}
+
+<span class="cm">// context.WithValue 传入闭包作为回调</span>
+runCtxWithSaver := context.WithValue(runCtx, model.SessionValueKey_SessionSaver,
+    <span class="kw">func</span>(ctx context.Context) <span class="ty">error</span> {
+        <span class="kw">return</span> s.saveSession(ctx)
+    },
+)</pre>
+<p class="file-ref">参考: agent_engine_service.go:37, agent_engine_service.go:28-34, handler.go:66-87</p>
+
+<!-- ============================================================ -->
+<h2 id="s18">18. 常见模式速查</h2>
+
+<table>
+<tr><th>模式</th><th>代码</th><th>说明</th></tr>
+<tr>
+  <td>错误检查</td>
+  <td><code>if err != nil { return err }</code></td>
+  <td>Go 中最常见的代码行</td>
+</tr>
+<tr>
+  <td>defer 清理</td>
+  <td><code>defer lock.Release(ctx)</code></td>
+  <td>资源释放、解锁、关闭文件</td>
+</tr>
+<tr>
+  <td>命名返回值 + defer</td>
+  <td><code>func f() (err error) { defer func() { ... }() }</code></td>
+  <td>defer 中可修改返回值</td>
+</tr>
+<tr>
+  <td>ok 模式</td>
+  <td><code>if v, ok := m[key]; ok { ... }</code></td>
+  <td>安全地从 map 取值或类型断言</td>
+</tr>
+<tr>
+  <td>空指针检查</td>
+  <td><code>if req == nil || req.Field == nil { ... }</code></td>
+  <td>访问嵌套指针前必须检查</td>
+</tr>
+<tr>
+  <td>切片追加</td>
+  <td><code>list = append(list, item)</code></td>
+  <td>向切片追加元素</td>
+</tr>
+<tr>
+  <td>错误包装</td>
+  <td><code>fmt.Errorf("...: %w", err)</code></td>
+  <td>包装错误保留原始错误链</td>
+</tr>
+<tr>
+  <td>构造函数</td>
+  <td><code>func NewXxx() *Xxx { return &Xxx{} }</code></td>
+  <td>Go 无构造函数，用工厂函数代替</td>
+</tr>
+<tr>
+  <td>链式配置</td>
+  <td><code>svc.WithBuildAgent(fn).WithPushStreamEvent(fn)</code></td>
+  <td>方法返回自身实现链式调用</td>
+</tr>
+</table>
+
+<h3>零值 (zero value) 速查</h3>
+<table>
+<tr><th>类型</th><th>零值</th></tr>
+<tr><td><code>int, int32, int64</code></td><td><code>0</code></td></tr>
+<tr><td><code>string</code></td><td><code>""</code> (空字符串)</td></tr>
+<tr><td><code>bool</code></td><td><code>false</code></td></tr>
+<tr><td><code>指针 *T</code></td><td><code>nil</code></td></tr>
+<tr><td><code>slice []T</code></td><td><code>nil</code></td></tr>
+<tr><td><code>map[K]V</code></td><td><code>nil</code></td></tr>
+<tr><td><code>interface</code></td><td><code>nil</code></td></tr>
+<tr><td><code>error</code></td><td><code>nil</code></td></tr>
+</table>
+
+<h3>格式化动词速查</h3>
+<table>
+<tr><th>动词</th><th>含义</th><th>示例</th></tr>
+<tr><td><code>%v</code></td><td>默认格式</td><td><code>fmt.Sprintf("val=%v", x)</code></td></tr>
+<tr><td><code>%+v</code></td><td>带字段名</td><td><code>fmt.Sprintf("req=%+v", req)</code></td></tr>
+<tr><td><code>%s</code></td><td>字符串</td><td>直接输出或 <code>string()</code></td></tr>
+<tr><td><code>%d</code></td><td>十进制整数</td><td><code>fmt.Sprintf("id=%d", id)</code></td></tr>
+<tr><td><code>%w</code></td><td>包装错误</td><td><code>fmt.Errorf("...: %w", err)</code></td></tr>
+</table>
+
+<section class="post-footer" id="references">
+  <h2 style="margin-top:0">参考资料与延伸阅读</h2>
+  <p>本页参考了官方 Go 文档、热门 Go 教程与 GitHub 学习仓库的内容组织方式：官方博客强调长期维护的文章索引；Go by Example 强调短小、可执行的示例；learn-go 类仓库强调练习与测验；awesome-go 类仓库强调资源导航。</p>
+  <ul>
+    <li><a href="https://go.dev/blog/" target="_blank" rel="noopener">The Go Blog</a>：官方博客与语言动态。</li>
+    <li><a href="https://go.dev/doc/effective_go" target="_blank" rel="noopener">Effective Go</a>：Go 语言惯用法与工程哲学。</li>
+    <li><a href="https://gobyexample.com/" target="_blank" rel="noopener">Go by Example</a>：面向示例的 Go 入门资料。</li>
+    <li><a href="https://github.com/inancgumus/learngo" target="_blank" rel="noopener">inancgumus/learngo</a>：1000+ Go 示例、练习与测验。</li>
+    <li><a href="https://github.com/golang/example" target="_blank" rel="noopener">golang/example</a>：Go 官方示例项目。</li>
+    <li><a href="https://github.com/avelino/awesome-go" target="_blank" rel="noopener">avelino/awesome-go</a>：Go 生态资源导航。</li>
+  </ul>
+  <p>基于 <code>creative_one_tto_agent</code> 项目实际代码整理。涵盖 Go 1.24 泛型语法。建议配合 <a href="https://go.dev/tour/">A Tour of Go</a> 练习基础语法，再用此文档对照项目代码加深理解。</p>
+</section>
+
+</main>
+</div>
+
+<script>
+  (() => {
+    const root = document.documentElement;
+    const progress = document.querySelector('.read-progress');
+    const topButton = document.querySelector('.back-top');
+    const themeButton = document.querySelector('.theme-toggle');
+    const searchBox = document.querySelector('.search-box');
+    const article = document.querySelector('#article');
+
+    const savedTheme = localStorage.getItem('go-guide-theme');
+    if (savedTheme) root.dataset.theme = savedTheme;
+
+    themeButton.addEventListener('click', () => {
+      const nextTheme = root.dataset.theme === 'light' ? 'dark' : 'light';
+      root.dataset.theme = nextTheme;
+      localStorage.setItem('go-guide-theme', nextTheme);
+    });
+
+    topButton.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+    document.querySelectorAll('pre').forEach((pre) => {
+      const button = document.createElement('button');
+      button.className = 'copy-code';
+      button.type = 'button';
+      button.textContent = '复制';
+      button.addEventListener('click', async () => {
+        try {
+          const clonedPre = pre.cloneNode(true);
+          clonedPre.querySelector('.copy-code')?.remove();
+          await navigator.clipboard.writeText(clonedPre.innerText.trim());
+          button.textContent = '已复制';
+          setTimeout(() => (button.textContent = '复制'), 1300);
+        } catch (error) {
+          button.textContent = '复制失败';
+          setTimeout(() => (button.textContent = '复制'), 1300);
+        }
+      });
+      pre.appendChild(button);
+    });
+
+    const headings = [...article.querySelectorAll('h2[id]')];
+    headings.forEach((heading) => {
+      const section = document.createElement('section');
+      section.className = 'chapter';
+      section.id = `${heading.id}-chapter`;
+      heading.parentNode.insertBefore(section, heading);
+      let node = heading;
+      while (node && !(node !== heading && node.matches && node.matches('h2[id], .post-footer'))) {
+        const next = node.nextSibling;
+        section.appendChild(node);
+        node = next;
+      }
+    });
+
+    const tocLinks = [...document.querySelectorAll('.toc a')];
+    const updateProgress = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const ratio = max > 0 ? window.scrollY / max : 0;
+      progress.style.transform = `scaleX(${Math.min(1, Math.max(0, ratio))})`;
+      topButton.classList.toggle('visible', window.scrollY > 500);
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        tocLinks.forEach((link) => link.classList.toggle('active', link.getAttribute('href') === `#${entry.target.id}`));
+      });
+    }, { rootMargin: '-35% 0px -55% 0px', threshold: 0.01 });
+    document.querySelectorAll('h2[id]').forEach((heading) => observer.observe(heading));
+
+    searchBox.addEventListener('input', (event) => {
+      const keyword = event.target.value.trim().toLowerCase();
+      document.querySelectorAll('.chapter').forEach((chapter) => {
+        chapter.hidden = keyword && !chapter.innerText.toLowerCase().includes(keyword);
+      });
+    });
+
+    window.addEventListener('scroll', updateProgress, { passive: true });
+    updateProgress();
+  })();
+</script>
+
+</body>
+</html>
