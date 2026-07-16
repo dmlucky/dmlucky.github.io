@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>阿兹海默疾病的辅助诊断系统</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23101a2b'/%3E%3Cpath d='M18 36c0-10 7-18 16-18s16 8 16 18-7 16-16 16-16-6-16-16Z' fill='%2334d1c3' fill-opacity='.2'/%3E%3Cpath d='M26 42c0-5 3-10 6-10s6 5 6 10-3 8-6 8-6-3-6-8Z' fill='%234da3ff'/%3E%3Cpath d='M32 16v32' stroke='%23e9f1fb' stroke-width='2' stroke-linecap='round' opacity='.5'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div>
+        <p class="product-kicker">NeuroAge Clinical Workspace</p>
+        <h1>阿兹海默疾病的辅助诊断系统</h1>
+        <p class="top-subtitle">论文的交互演示</p>
+      </div>
+      <div class="top-actions" aria-label="视角切换">
+        <button class="mode-button active" type="button" data-view="patient">病人视角</button>
+        <button class="mode-button" type="button" data-view="doctor">医生视角</button>
+        <button class="icon-button" id="resetBtn" type="button" title="重置病例">↺</button>
+      </div>
+    </header>
+
+    <section class="intro-panel" aria-label="产品说明">
+      <div>
+        <span>输入</span>
+        <strong>MRI 图像 + 年龄信息</strong>
+      </div>
+      <div>
+        <span>输出</span>
+        <strong>疾病阶段的预测</strong>
+      </div>
+      <div>
+        <span>临床视角</span>
+        <strong>CN / MCI / AD 风险分期</strong>
+      </div>
+      <div>
+        <span>展示模式</span>
+        <strong>病人解释 + 医生详情</strong>
+      </div>
+    </section>
+
+    <main class="workspace">
+      <aside class="panel case-panel" aria-label="病例与影像">
+        <div class="panel-head">
+          <div>
+            <span class="section-label">Case & MRI</span>
+            <h2>病例与影像</h2>
+          </div>
+          <span class="status-chip" id="dataMode">示例病例</span>
+        </div>
+
+        <div class="case-list" id="caseList"></div>
+
+        <label class="upload-target" for="mriUpload">
+          <span>上传 MRI 图片</span>
+          <small>PNG / JPG 本地预览</small>
+        </label>
+        <input id="mriUpload" type="file" accept="image/*" hidden />
+
+        <div class="viewer-shell">
+          <canvas id="mriCanvas" width="680" height="680" aria-label="MRI 影像预览"></canvas>
+          <div class="viewer-badge" id="viewerBadge">Axial slice 12 / 24</div>
+        </div>
+
+        <div class="control-row">
+          <label for="sliceRange">切片</label>
+          <input id="sliceRange" type="range" min="1" max="24" value="12" />
+          <strong id="sliceValue">12</strong>
+        </div>
+
+        <div class="switch-grid">
+          <label class="switch-line">
+            <input id="heatmapToggle" type="checkbox" checked />
+            <span>热力图叠加</span>
+          </label>
+          <label class="switch-line">
+            <input id="motionToggle" type="checkbox" checked />
+            <span>分析动效</span>
+          </label>
+        </div>
+
+        <div class="brain-gallery">
+          <div class="gallery-head">
+            <span>脑龄图像带</span>
+            <small id="atlasHint">实际年龄 → 预测脑龄 → 风险参考</small>
+          </div>
+          <div class="thumbnail-grid" id="brainAgeGallery" aria-label="脑龄图像缩略图"></div>
+        </div>
+      </aside>
+
+      <section class="panel input-panel" aria-label="患者信息与分析">
+        <div class="panel-head">
+          <div>
+            <span class="section-label">Patient Input</span>
+            <h2>患者信息</h2>
+          </div>
+          <span class="status-chip quiet" id="analysisState">待分析</span>
+        </div>
+
+        <div class="form-grid">
+          <label class="field">
+            <span>年龄</span>
+            <input id="ageInput" type="number" min="35" max="95" value="68" />
+          </label>
+          <label class="field">
+            <span>性别</span>
+            <select id="sexInput">
+              <option value="female">女性</option>
+              <option value="male">男性</option>
+            </select>
+          </label>
+        </div>
+
+        <button class="primary-button" id="analyzeBtn" type="button">
+          <span class="play-mark">▶</span>
+          开始分析
+        </button>
+
+        <div class="pipeline" id="pipeline">
+          <div class="pipeline-step active" data-step="0">
+            <span>01</span>
+            <strong>MRI quality check</strong>
+          </div>
+          <div class="pipeline-step" data-step="1">
+            <span>02</span>
+            <strong>Brain age estimation</strong>
+          </div>
+          <div class="pipeline-step" data-step="2">
+            <span>03</span>
+            <strong>CN / MCI / AD staging</strong>
+          </div>
+          <div class="pipeline-step" data-step="3">
+            <span>04</span>
+            <strong>Clinical safety review</strong>
+          </div>
+        </div>
+
+        <div class="metrics-strip">
+          <div class="metric-tile">
+            <span>实际年龄</span>
+            <strong id="chronAge">68</strong>
+            <small>years</small>
+          </div>
+          <div class="metric-tile">
+            <span>预测脑龄</span>
+            <strong id="brainAge">74.2</strong>
+            <small>years</small>
+          </div>
+          <div class="metric-tile accent">
+            <span>Brain Age Gap</span>
+            <strong id="brainGap">+6.2</strong>
+            <small>years</small>
+          </div>
+        </div>
+
+        <div class="brain-age-track">
+          <div class="track-head">
+            <span>生理年龄偏移</span>
+            <strong id="gapLabel">加速老化倾向</strong>
+          </div>
+          <div class="axis">
+            <span>-8</span>
+            <span>0</span>
+            <span>+12</span>
+          </div>
+          <div class="track">
+            <div class="zero-line"></div>
+            <div class="gap-marker" id="gapMarker"></div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel result-panel" aria-label="评估结果">
+        <div class="panel-head">
+          <div>
+            <span class="section-label">Assessment</span>
+            <h2>评估结果</h2>
+          </div>
+          <span class="risk-chip" id="riskChip">MCI-like</span>
+        </div>
+
+        <div class="age-summary-card">
+          <div class="age-ring">
+            <svg viewBox="0 0 150 150" aria-hidden="true">
+              <circle cx="75" cy="75" r="61" class="age-ring-bg"></circle>
+              <circle cx="75" cy="75" r="61" class="age-ring-fg" id="ageArc"></circle>
+            </svg>
+            <div class="age-ring-center">
+              <strong id="ringAge">74.2</strong>
+              <span>Brain age</span>
+            </div>
+          </div>
+          <div class="age-summary-copy">
+            <span>Brain Age Gap</span>
+            <strong id="ringGap">+6.2 years</strong>
+            <p id="ringCopy">脑龄高于实际年龄，提示加速老化倾向。</p>
+          </div>
+        </div>
+
+        <div class="result-hero">
+          <span id="stateLabel">Accelerated brain aging</span>
+          <strong id="finalLabel">MCI-like pattern</strong>
+          <p id="summaryText">当前 MRI 形态与脑龄偏移提示轻度异常风险，建议结合认知量表和临床检查进一步评估。</p>
+        </div>
+
+        <div class="probability-panel">
+          <div class="prob-row">
+            <div><strong>CN</strong><span>认知正常</span></div>
+            <div class="bar"><i id="barCN"></i></div>
+            <em id="probCN">18%</em>
+          </div>
+          <div class="prob-row">
+            <div><strong>MCI</strong><span>轻度认知障碍</span></div>
+            <div class="bar"><i id="barMCI"></i></div>
+            <em id="probMCI">63%</em>
+          </div>
+          <div class="prob-row">
+            <div><strong>AD</strong><span>阿尔茨海默病</span></div>
+            <div class="bar"><i id="barAD"></i></div>
+            <em id="probAD">19%</em>
+          </div>
+        </div>
+
+        <div class="view-panel" id="patientView">
+          <div class="clinical-note">
+            <strong>病人说明</strong>
+            <p id="patientNote">这不是临床诊断，而是基于 MRI 形态和年龄信息生成的脑健康风险提示。</p>
+          </div>
+          <div class="recommendation" id="patientRecommendation">建议 6 - 12 个月后复查 MRI，并进行记忆、注意力等认知筛查。</div>
+        </div>
+
+        <div class="view-panel hidden" id="doctorView">
+          <div class="doctor-grid">
+            <div><span>置信度</span><strong id="confidenceVal">0.81</strong></div>
+            <div><span>AD 排除 NPV</span><strong id="npvVal">96.5%</strong></div>
+            <div><span>严重错分风险</span><strong id="catRiskVal">2.1%</strong></div>
+            <div><span>Clinical cost</span><strong id="costVal">0.143</strong></div>
+          </div>
+          <div class="doctor-detail">
+            <strong>关注区域</strong>
+            <p id="regionText">海马旁回、内侧颞叶、侧脑室周围区域。</p>
+          </div>
+          <div class="doctor-detail">
+            <strong>个体化提示</strong>
+            <p id="promptText">Female subject, age 68, undergoing brain MRI for cognitive assessment.</p>
+          </div>
+          <div class="region-grid" id="regionGrid" aria-label="脑区归因"></div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
