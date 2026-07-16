@@ -266,7 +266,7 @@ function renderCaseButtons() {
       <img src="${item.preview}" alt="${item.label} MRI preview">
       <span class="case-copy">
         <strong>${item.label}</strong>
-        <span>${item.subjectId.toUpperCase()} · ${item.finalLabel} · Age ${item.age}</span>
+        <span>${item.subjectId.toUpperCase()} · Age ${item.age}</span>
       </span>
     </button>
   `).join("");
