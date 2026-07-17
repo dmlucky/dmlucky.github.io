@@ -161,6 +161,9 @@ const el = {
   promptText: document.querySelector("#promptText"),
   patientView: document.querySelector("#patientView"),
   doctorView: document.querySelector("#doctorView"),
+  prdDrawer: document.querySelector("#prdDrawer"),
+  prdBackdrop: document.querySelector("#prdBackdrop"),
+  prdCloseBtn: document.querySelector("#prdCloseBtn"),
   mriUpload: document.querySelector("#mriUpload"),
   brainAgeGallery: document.querySelector("#brainAgeGallery"),
   atlasHint: document.querySelector("#atlasHint"),
@@ -330,6 +333,16 @@ function renderResult() {
   }
   if (el.doctorView) {
     el.doctorView.classList.remove("hidden");
+  }
+  const prdOpen = state.view === "prd";
+  document.body.classList.toggle("prd-open", prdOpen);
+  if (el.prdDrawer) {
+    el.prdDrawer.classList.toggle("hidden", !prdOpen);
+    el.prdDrawer.setAttribute("aria-hidden", String(!prdOpen));
+  }
+  if (el.prdBackdrop) {
+    el.prdBackdrop.classList.toggle("hidden", !prdOpen);
+    el.prdBackdrop.setAttribute("aria-hidden", String(!prdOpen));
   }
   el.modeButtons.forEach((button) => button.classList.toggle("active", button.dataset.view === state.view));
 
@@ -766,6 +779,7 @@ function bindEvents() {
   el.analyzeBtn.addEventListener("click", analyze);
 
   el.resetBtn.addEventListener("click", () => {
+    state.view = "doctor";
     state.slice = 12;
     state.heatmap = true;
     state.motion = true;
@@ -782,7 +796,31 @@ function bindEvents() {
     button.addEventListener("click", () => {
       state.view = button.dataset.view;
       renderResult();
+      if (state.view === "prd" && el.prdDrawer) {
+        el.prdDrawer.scrollTop = 0;
+      }
     });
+  });
+
+  if (el.prdCloseBtn) {
+    el.prdCloseBtn.addEventListener("click", () => {
+      state.view = "doctor";
+      renderResult();
+    });
+  }
+
+  if (el.prdBackdrop) {
+    el.prdBackdrop.addEventListener("click", () => {
+      state.view = "doctor";
+      renderResult();
+    });
+  }
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && state.view === "prd") {
+      state.view = "doctor";
+      renderResult();
+    }
   });
 
   el.mriUpload.addEventListener("change", (event) => {

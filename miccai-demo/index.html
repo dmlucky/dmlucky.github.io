@@ -15,7 +15,8 @@
         <h1>Alzheimer's Disease辅助诊疗系统</h1>
       </div>
       <div class="top-actions" aria-label="当前视角">
-        <span class="mode-pill">医生视角</span>
+        <button class="mode-button active" type="button" data-view="doctor">医生视角</button>
+        <button class="mode-button" type="button" data-view="prd">PRD</button>
         <button class="icon-button" id="resetBtn" type="button" title="重置病例">↺</button>
       </div>
     </header>
@@ -237,6 +238,243 @@
       </aside>
     </main>
   </div>
+
+  <div class="prd-backdrop hidden" id="prdBackdrop" aria-hidden="true"></div>
+  <aside class="prd-drawer hidden" id="prdDrawer" aria-hidden="true" aria-label="PRD 文档">
+    <header class="prd-header">
+      <div>
+        <p class="product-kicker">Product Requirement Document</p>
+        <h2>Alzheimer's Disease辅助诊疗系统 PRD</h2>
+      </div>
+      <button class="icon-button prd-close" id="prdCloseBtn" type="button" title="关闭 PRD">×</button>
+    </header>
+
+    <section class="prd-summary">
+      <div><span>目标用户</span><strong>影像科医生 / 神经内科医生</strong></div>
+      <div><span>核心场景</span><strong>阿兹海默疾病患者的早期诊断</strong></div>
+      <div><span>技术基础</span><strong>Mixture of Experts（参考豆包的技术框架之一）</strong></div>
+    </section>
+
+    <nav class="prd-toc" aria-label="PRD 目录">
+      <a href="#prd-problem">2 背景与价值</a>
+      <a href="#prd-solution">3 整体方案</a>
+      <a href="#prd-metrics-roadmap">4 指标与规划</a>
+      <a href="#prd-features">5 功能设计</a>
+      <a href="#prd-logic">6 业务逻辑</a>
+      <a href="#prd-exception">7 边界异常</a>
+      <a href="#prd-evaluation">8 埋点评估</a>
+      <a href="#prd-risk">9 风险依赖</a>
+    </nav>
+
+    <article class="prd-content">
+      <section id="prd-problem" class="prd-section">
+        <span class="section-label">2. Problem & Value Proposition</span>
+        <h3>背景与价值</h3>
+        <h4>2.1 项目背景</h4>
+        <p>随着人口老龄化加速，认知正常（CN）、轻度认知障碍（MCI）与阿尔茨海默病（AD）谱系人群的脑结构退化评估成为神经影像和临床筛查的重要问题。不同个体在相同实际年龄下可能呈现不同脑衰老轨迹，单纯依赖实际年龄或医生主观阅片难以稳定刻画脑结构状态。</p>
+        <p>脑龄预测通过 MRI 建模个体生理脑龄，并计算 Brain Age Gap（预测脑龄 - 实际年龄），能够把脑衰老偏离程度转化为连续、可解释的量化指标。本产品面向医院真实使用场景，提供医生端辅助诊疗工作台。</p>
+
+        <h4>2.2 用户痛点</h4>
+        <ul>
+          <li>医生需要在大量 MRI 影像中快速识别异常脑衰老模式，人工判断耗时且一致性不足。</li>
+          <li>CN、MCI、AD 的结构差异存在连续过渡，早期 MCI 风险提示不够直观。</li>
+          <li>传统 AI 结果常只给出单一分数，缺少脑区关注、置信度、不确定性等医生可复核信息。</li>
+          <li>医院落地需要可演示、可解释、可审计的前端流程，而不是只停留在模型离线评估结果。</li>
+        </ul>
+
+        <h4>2.3 问题分析 / 竞品分析</h4>
+        <p>竞品分析聚焦不同算法路线与医学 AI 方案。当前竞品不是普通软件，而是面向脑龄预测、AD 早期筛查和医学影像解释的技术方案。</p>
+        <div class="prd-table-wrap">
+          <table class="prd-table">
+            <thead>
+              <tr><th>竞品 / 方案</th><th>能力</th><th>主要不足</th><th>本产品差异点</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>传统 BrainAGE / 机器学习</td><td>基于手工特征估计脑龄</td><td>特征表达弱，难刻画复杂结构变化</td><td>使用深度 MRI 表征与医生可读的风险输出</td></tr>
+              <tr><td>3D CNN 脑龄模型</td><td>端到端学习 MRI 到年龄映射</td><td>多为单模型，容易学习平均化衰老规律</td><td>引入多专家模型刻画异质脑衰老轨迹</td></tr>
+              <tr><td>Transformer 类模型</td><td>增强全局结构建模能力</td><td>解释成本高，临床阶段语义弱</td><td>输出 BAG、CN/MCI/AD 概率和热力图解释</td></tr>
+              <tr><td>普通 MoE 方法</td><td>可分配不同专家处理不同样本</td><td>路由不稳定，专家塌缩，缺少医学先验</td><td>使用诊断后验引导路由，配合负载均衡与计划式教学</td></tr>
+              <tr><td>通用医学影像 AI 工具</td><td>支持影像上传和结果展示</td><td>通常不围绕脑龄偏移和 AD 分期闭环设计</td><td>聚焦 AD 辅助诊疗，形成 MRI → 脑龄 → 分期 → 解释闭环</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4>2.4 产品价值</h4>
+        <ul>
+          <li>为医生提供“脑龄 + Brain Age Gap + CN/MCI/AD 概率 + 脑区热力图”的统一辅助判断入口。</li>
+          <li>将诊断感知路由、多专家协同和可解释性输出产品化为可交互临床工作台。</li>
+          <li>支持示例病例、MRI 上传、年龄/性别输入和结果模拟，便于科研成果展示、院内沟通和产品化验证。</li>
+        </ul>
+
+        <h4>2.5 商业价值</h4>
+        <ul>
+          <li>医院侧：可作为影像科/神经内科 AD 早筛辅助模块，提升科研转化与智慧医院展示能力。</li>
+          <li>科室侧：沉淀标准化脑健康评估流程，减少重复阅片和沟通成本。</li>
+          <li>项目侧：以江苏省人民医院落地项目为样板，后续可拓展为院内部署、科研队列管理和多中心验证平台。</li>
+        </ul>
+      </section>
+
+      <section id="prd-solution" class="prd-section">
+        <span class="section-label">3. Overall Solution</span>
+        <h3>整体方案</h3>
+        <h4>3.1 产品定位</h4>
+        <p>本产品定位为医生端 Alzheimer's Disease 辅助诊疗系统，面向结构 MRI 场景，提供脑龄预测、脑龄偏移分析、CN/MCI/AD 风险分期和脑区解释视图。系统不是自动诊断工具，而是帮助医生形成更快、更稳定、更可解释的辅助判断。</p>
+
+        <h4>3.2 整体流程（Workflow）</h4>
+        <ol>
+          <li>选择示例病例或上传 MRI 图像。</li>
+          <li>输入患者年龄、性别等基础信息。</li>
+          <li>系统进行 MRI quality check、脑龄估计、CN/MCI/AD 分期和安全复核。</li>
+          <li>输出预测脑龄、Brain Age Gap、风险阶段、置信度和严重错分风险。</li>
+          <li>展示 Grad-CAM 风格热力图和关注脑区，供医生复核。</li>
+          <li>Beta/GA 阶段支持结果留痕、报告导出、PACS/HIS 集成。</li>
+        </ol>
+
+        <h4>3.3 系统架构</h4>
+        <div class="prd-architecture">
+          <div><strong>前端交互层</strong><span>医生工作台、MRI 预览、风险图表、PRD 展示</span></div>
+          <div><strong>业务服务层</strong><span>病例管理、任务状态、报告生成、审计日志</span></div>
+          <div><strong>模型推理层</strong><span>共享编码器、诊断分支、MoE 路由器、年龄专家、不确定性头</span></div>
+          <div><strong>数据集成层</strong><span>MRI 文件、年龄/性别、CN/MCI/AD 标签、PACS/HIS/科研队列</span></div>
+        </div>
+      </section>
+
+      <section id="prd-metrics-roadmap" class="prd-section">
+        <span class="section-label">4. Success Metrics & Roadmap</span>
+        <h3>成功指标与规划</h3>
+        <h4>4.1 北极星指标</h4>
+        <p>医生完成一次 MRI 辅助评估并认可结果可用于临床参考的比例。该指标同时衡量流程可用性、模型可信度和医生解释接受度。</p>
+
+        <h4>4.2 核心业务指标</h4>
+        <ul>
+          <li>任务完成率：上传 MRI 后成功生成评估结果的比例。</li>
+          <li>医生采纳率：医生查看结果后选择保留/导出/记录的比例。</li>
+          <li>平均分析耗时：从上传到生成评估结果的时间。</li>
+          <li>模型指标：MAE、RMSE、r、GFI、WSR、CN/MCI/AD 分期准确率。</li>
+          <li>解释指标：热力图查看率、脑区解释展开率、医生反馈有效率。</li>
+        </ul>
+
+        <h4>4.3 Roadmap（MVP → Beta → GA）</h4>
+        <div class="roadmap-grid">
+          <div><strong>MVP</strong><span>示例病例、MRI 上传、年龄性别输入、Mock 预测、医生视图、PRD 面板</span></div>
+          <div><strong>Beta</strong><span>接入真实推理 API、报告导出、用户反馈、异常处理、院内小样本验证</span></div>
+          <div><strong>GA</strong><span>PACS/HIS 集成、多中心验证、权限审计、模型监控、正式临床辅助工作流</span></div>
+        </div>
+      </section>
+
+      <section id="prd-features" class="prd-section">
+        <span class="section-label">5. Detailed Solution</span>
+        <h3>详细功能设计</h3>
+
+        <div class="feature-block">
+          <h4>功能一：病例与 MRI 输入</h4>
+          <p><strong>功能描述：</strong>支持 Case A/B/C 示例病例和本地 MRI 图片上传，帮助医生快速进入分析流程。</p>
+          <p><strong>交互流程：</strong>选择病例或上传图片 → MRI 预览 → 调整切片 → 开启/关闭热力图。</p>
+          <p><strong>页面设计：</strong>左侧病例列表 + MRI viewer + 切片滑杆 + 热力图开关。</p>
+          <p><strong>业务规则：</strong>图片格式限制 PNG/JPG；上传图片仅本地预览；未接后端时采用 Mock 推理。</p>
+          <p><strong>异常处理：</strong>图片损坏、格式不支持、缺少 MRI 时提示用户更换文件或使用示例病例。</p>
+        </div>
+
+        <div class="feature-block">
+          <h4>功能二：患者基础信息与分析流程</h4>
+          <p><strong>功能描述：</strong>收集年龄、性别等基础人口学信息，作为脑龄预测和个体化建模的输入。</p>
+          <p><strong>交互流程：</strong>输入年龄/性别 → 点击开始分析 → 展示四阶段进度 → 生成结果。</p>
+          <p><strong>页面设计：</strong>中间区域展示输入表单、分析按钮、pipeline 和脑龄偏移指标。</p>
+          <p><strong>业务规则：</strong>年龄范围 35-95；性别用于个体差异编码；分析完成后更新风险和脑龄轨道。</p>
+          <p><strong>异常处理：</strong>年龄为空或超范围时自动约束；模型异常时降级展示“待复核”。</p>
+        </div>
+
+        <div class="feature-block">
+          <h4>功能三：疾病阶段预测与医生解释视图</h4>
+          <p><strong>功能描述：</strong>输出 CN/MCI/AD 概率、预测脑龄、BAG、置信度、AD 排除 NPV、严重错分风险与关注脑区。</p>
+          <p><strong>交互流程：</strong>分析完成 → 查看结果卡片 → 查看概率分布 → 查看医生指标 → 查看脑区归因。</p>
+          <p><strong>页面设计：</strong>右侧评估结果区，包含脑龄环图、概率条、医生指标卡和脑区归因条。</p>
+          <p><strong>业务规则：</strong>最终风险阶段由概率分布与 BAG 阈值共同决定；高风险结果需要医生复核。</p>
+          <p><strong>异常处理：</strong>置信度低、严重错分风险高或图像质量差时，结果标记为“建议复核”。</p>
+        </div>
+
+        <div class="feature-block">
+          <h4>功能四：PRD 文档查看</h4>
+          <p><strong>功能描述：</strong>在医生视角右侧提供 PRD 入口，便于展示产品背景、功能规划和落地逻辑。</p>
+          <p><strong>交互流程：</strong>点击 PRD → 打开右侧文档抽屉 → 浏览目录和章节 → 点击医生视角或关闭按钮返回。</p>
+          <p><strong>页面设计：</strong>右侧抽屉式文档，目录固定在顶部，正文按 PRD 章节组织。</p>
+          <p><strong>业务规则：</strong>PRD 仅作为产品说明，不影响分析状态和病例数据。</p>
+          <p><strong>异常处理：</strong>小屏幕下 PRD 抽屉全屏展示，避免正文溢出。</p>
+        </div>
+      </section>
+
+      <section id="prd-logic" class="prd-section">
+        <span class="section-label">6. Business Logic</span>
+        <h3>核心业务逻辑</h3>
+        <h4>搜索策略</h4>
+        <p>MVP 阶段无复杂搜索，病例选择基于 Case A/B/C 示例；Beta 阶段支持按患者编号、风险阶段、年龄区间和检查时间检索历史病例。</p>
+        <h4>推荐策略</h4>
+        <p>系统根据 BAG、BAGZ、CN/MCI/AD 概率和不确定性输出复核建议：正常随访、认知量表评估、神经内科进一步检查或高风险优先复核。</p>
+        <h4>排序逻辑</h4>
+        <p>历史队列优先展示高 AD 概率、高 Brain Age Gap、高严重错分风险和低置信度病例；科研队列可按 BAGZ 分位数排序。</p>
+        <h4>Agent Workflow</h4>
+        <ol>
+          <li>影像接入：读取 MRI 与基础人口学信息。</li>
+          <li>质量检查：判断图片格式、尺寸和可用性。</li>
+          <li>共享表征：从 T1 MRI 提取脑结构特征并融合性别信息。</li>
+          <li>诊断后验：预测 CN/MCI/AD 后验概率，作为临床语义导航。</li>
+          <li>MoE 路由：诊断后验引导 Top-K 年龄专家，避免盲目专家分配。</li>
+          <li>协同预测：融合专家输出得到预测脑龄、不确定性和 BAG/BAGZ。</li>
+          <li>解释生成：输出热力图、关注脑区、医生指标和复核建议。</li>
+        </ol>
+      </section>
+
+      <section id="prd-exception" class="prd-section">
+        <span class="section-label">7. Exception</span>
+        <h3>边界与异常</h3>
+        <ul>
+          <li><strong>错误处理：</strong>上传失败、模型超时、推理服务不可用时展示明确错误提示，并允许切换示例病例。</li>
+          <li><strong>中断流程：</strong>用户切换病例、重置或关闭 PRD 不应清空已生成结果，除非明确点击重置。</li>
+          <li><strong>空结果：</strong>无 MRI 或年龄信息缺失时禁止真实分析，MVP 使用默认示例病例兜底。</li>
+          <li><strong>降级策略：</strong>模型服务不可用时降级到规则/Mock 演示；置信度不足时输出“仅供复核参考”。</li>
+        </ul>
+      </section>
+
+      <section id="prd-evaluation" class="prd-section">
+        <span class="section-label">8. Metrics</span>
+        <h3>数据埋点与评估</h3>
+        <h4>埋点设计</h4>
+        <ul>
+          <li>case_select：病例选择、病例类型、年龄、风险阶段。</li>
+          <li>mri_upload：文件类型、尺寸、上传成功/失败。</li>
+          <li>analysis_start / analysis_complete：耗时、是否成功、最终风险阶段。</li>
+          <li>doctor_view_result：医生指标曝光、热力图开关、脑区解释查看。</li>
+          <li>prd_open / prd_close：PRD 打开次数、停留时长、章节点击。</li>
+        </ul>
+        <h4>A/B 实验</h4>
+        <p>Beta 阶段可对比“仅概率结果”与“概率 + BAG + 热力图解释”的医生采纳率和判断耗时，验证解释视图的产品价值。</p>
+        <h4>效果评估</h4>
+        <p>算法侧使用 MAE、RMSE、r、GFI、WSR、分期准确率和外部队列表现；产品侧使用完成率、采纳率、医生满意度、平均报告生成时间和异常率。</p>
+      </section>
+
+      <section id="prd-risk" class="prd-section">
+        <span class="section-label">9. Risk & Dependency</span>
+        <h3>风险与依赖</h3>
+        <h4>技术依赖</h4>
+        <ul>
+          <li>真实模型推理服务、GPU 资源、MRI 预处理、Grad-CAM 热力图生成。</li>
+          <li>PACS/HIS 对接、病例权限、报告导出和审计日志能力。</li>
+        </ul>
+        <h4>数据依赖</h4>
+        <ul>
+          <li>训练与验证依赖 ADNI、OASIS 和院内真实队列。</li>
+          <li>上线前需完成数据脱敏、受试者级划分、多中心泛化验证和医生标注复核。</li>
+        </ul>
+        <h4>上线风险</h4>
+        <ul>
+          <li>模型泛化不足：不同设备和扫描协议导致分布偏移。</li>
+          <li>临床误用风险：必须明确“辅助诊疗，不替代医生诊断”。</li>
+          <li>解释偏差风险：热力图只能作为复核参考，不能单独作为诊断依据。</li>
+          <li>合规风险：正式落地需满足院内数据安全、伦理审批和医疗 AI 使用规范。</li>
+        </ul>
+      </section>
+    </article>
+  </aside>
 
   <script src="./app.js"></script>
 </body>
