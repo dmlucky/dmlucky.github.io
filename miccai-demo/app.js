@@ -108,7 +108,7 @@ const atlasFrames = [
 
 const state = {
   caseId: "mci",
-  view: "patient",
+  view: "doctor",
   age: 68,
   sex: "female",
   slice: 12,
@@ -311,8 +311,12 @@ function renderResult() {
   updateProbability("MCI", result.stage.MCI);
   updateProbability("AD", result.stage.AD);
 
-  el.patientNote.textContent = result.patientNote;
-  el.patientRecommendation.textContent = result.recommendation;
+  if (el.patientNote) {
+    el.patientNote.textContent = result.patientNote;
+  }
+  if (el.patientRecommendation) {
+    el.patientRecommendation.textContent = result.recommendation;
+  }
   el.confidenceVal.textContent = result.confidence.toFixed(2);
   el.npvVal.textContent = percent(result.npv);
   el.catRiskVal.textContent = percent(result.catastrophicRisk);
@@ -321,8 +325,12 @@ function renderResult() {
   el.promptText.textContent = `${state.sex === "female" ? "Female" : "Male"} subject, age ${state.age}, undergoing brain MRI for cognitive assessment.`;
   renderRegionGrid(result);
 
-  el.patientView.classList.toggle("hidden", state.view !== "patient");
-  el.doctorView.classList.toggle("hidden", state.view !== "doctor");
+  if (el.patientView) {
+    el.patientView.classList.add("hidden");
+  }
+  if (el.doctorView) {
+    el.doctorView.classList.remove("hidden");
+  }
   el.modeButtons.forEach((button) => button.classList.toggle("active", button.dataset.view === state.view));
 
   el.analysisState.textContent = state.analyzing ? "分析中" : "已生成";

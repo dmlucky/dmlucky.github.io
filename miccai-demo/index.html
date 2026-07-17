@@ -14,9 +14,8 @@
         <p class="product-kicker">MICCAI clinical demonstration</p>
         <h1>Alzheimer's Disease的辅助医疗诊断系统</h1>
       </div>
-      <div class="top-actions" aria-label="视角切换">
-        <button class="mode-button active" type="button" data-view="patient">病人视角</button>
-        <button class="mode-button" type="button" data-view="doctor">医生视角</button>
+      <div class="top-actions" aria-label="当前视角">
+        <span class="mode-pill">医生视角</span>
         <button class="icon-button" id="resetBtn" type="button" title="重置病例">↺</button>
       </div>
     </header>
@@ -31,12 +30,8 @@
         <strong>疾病阶段的预测</strong>
       </div>
       <div>
-        <span>临床视角</span>
-        <strong>CN / MCI / AD 风险分期</strong>
-      </div>
-      <div>
         <span>展示模式</span>
-        <strong>病人解释 + 医生详情</strong>
+        <strong>医生详情视图</strong>
       </div>
     </section>
 
@@ -222,15 +217,7 @@
           </div>
         </div>
 
-        <div class="view-panel" id="patientView">
-          <div class="clinical-note">
-            <strong>病人说明</strong>
-            <p id="patientNote">这不是临床诊断，而是基于 MRI 形态和年龄信息生成的脑健康风险提示。</p>
-          </div>
-          <div class="recommendation" id="patientRecommendation">建议 6 - 12 个月后复查 MRI，并进行记忆、注意力等认知筛查。</div>
-        </div>
-
-        <div class="view-panel hidden" id="doctorView">
+        <div class="view-panel" id="doctorView">
           <div class="doctor-grid">
             <div><span>置信度</span><strong id="confidenceVal">0.81</strong></div>
             <div><span>AD 排除 NPV</span><strong id="npvVal">96.5%</strong></div>
